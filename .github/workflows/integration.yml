@@ -12,7 +12,7 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: Bitspillani18#
+          MYSQL_ROOT_PASSWORD: Bitspilani18#
         ports:
           - 8081:8081
 
