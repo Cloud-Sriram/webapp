@@ -1,101 +1,32 @@
-name: Integ-Testing
+name: Continuous Integration
 
- 
-
- 
-
-on: [pull_request]
-
- 
+on:
+  pull_request:
+    branches: [ main ]
 
 jobs:
-
   build:
-
-    name: install
-
     runs-on: ubuntu-latest
 
- 
-
     services:
-
       mysql:
-
         image: mysql:5.7
-
         env:
-
-          MYSQL_ROOT_PASSWORD: Bitspilani18#
-
-          MYSQL_DATABASE: testing
-
+          MYSQL_ROOT_PASSWORD: Bitspillani18#
         ports:
-
-          - 3306:3306
-
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
- 
+          - 8081:8081
 
     steps:
-
-    - name: Checkout code
-
+    - name: Check out the repository
       uses: actions/checkout@v2
 
- 
-
-    - name: Set up Node.js
-
-      uses: actions/setup-node@v2
-
-      with:
-
-        node-version: '14'
-
- 
-
     - name: Install Dependencies
-
       run: npm install
 
- 
-
-    # - name: Wait for MySQL to be ready
-
-    #   run: |
-
-    #     n=0
-
-    #     until [ $n -ge 5 ]
-
-    #     do
-
-    #       npm run db:migrate:up # Replace with your database migration command
-
-    #       [ $? -eq 0 ] && break
-
-    #       n=$[$n+1]
-
-    #       sleep 15
-
-    #     done
-
- 
-
-    - name: Run Tests
-
-      env:
-
-        DB_HOST: localhost
-
-        DB_PORT: 3306
-
-        DB_USER: root
-
-        DB_PASSWORD: Bitspilani18#
-
-        DB_NAME: testing
-
+    - name: Run integration tests
       run: npm test
+      env:
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_PORT: 8081
+        MYSQL_USER: testing
+        MYSQL_PASSWORD: Bitspillani18#
