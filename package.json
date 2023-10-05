@@ -1,0 +1,28 @@
+{
+  "name": "assignment-2_js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test.js --exit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "chai": "^4.3.10",
+    "csv-parse": "^5.5.0",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mocha": "^10.2.0",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.1",
+    "sequelize": "^6.33.0",
+    "supertest": "^6.3.3"
+  }
+}
