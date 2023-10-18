@@ -20,7 +20,7 @@ jobs:
         DATABASE_USER: ${{vars.DATABASE_USER}}
         DATABASE_PASSWORD: ${{vars.DATABASE_PASSWORD}}
         DATABASE_NAME: ${{ vars.DATABASE_NAME }}
-        DATABASE_HOST: ${{vars.DATABASE_HOST}}
+    
 
  
 
@@ -76,4 +76,3 @@ jobs:
 
       run: npm test
 
-      
