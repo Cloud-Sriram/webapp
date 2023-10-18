@@ -8,15 +8,32 @@ Assignment.init({
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    allowNull: false,
     readonly: true,
   },
-  title: DataTypes.STRING,
-  points: DataTypes.INTEGER,
-  num_of_attempts:DataTypes.INTEGER,
-  deadline: DataTypes.DATE,    
+  
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+
+  points: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+
+  num_of_attempts: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+
+  deadline: {
+    type: DataTypes.DATE,
+    allowNull: false
+  },
+
   assignment_created: DataTypes.DATE,
-  assignment_updated : DataTypes.DATE
+
+  assignment_updated: DataTypes.DATE
 }, {
   sequelize,
   modelName: 'assignment',
@@ -24,7 +41,4 @@ Assignment.init({
   underscored: true
 });
 
-
-
 module.exports = Assignment;
-
