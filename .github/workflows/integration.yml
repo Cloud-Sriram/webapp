@@ -13,14 +13,11 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     env:
-        LOCAL_DATABASE_HOST: ${{ vars.LOCAL_DATABASE_HOST }}
         DATABASE_HOST: ${{ vars.DATABASE_HOST }}
-        ROOT_DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
-        ROOT_DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
-        DATABASE_USER: ${{vars.DATABASE_USER}}
+        DATABASE_USER: ${{vars.ROOT_DATABASE_USER}}
         DATABASE_PASSWORD: ${{vars.DATABASE_PASSWORD}}
         DATABASE_NAME: ${{ vars.DATABASE_NAME }}
-    
+        PORT: ${{ vars.PORT }}    
 
  
 
@@ -70,7 +67,7 @@ jobs:
 
     - name: Create database in the MySql server
 
-      run: sudo mysql --user=$ROOT_DATABASE_USER --password=$ROOT_DATABASE_PASSWORD -e "create database $DATABASE_NAME";
+      run: sudo mysql --user=root --password=root -e "create database $DATABASE_NAME";
 
     - name: Test webapp application
 
