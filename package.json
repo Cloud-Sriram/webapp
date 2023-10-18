@@ -7,7 +7,6 @@
     "start": "nodemon dist/main.js",
     "test": "mocha test.js --exit",
     "build": "webpack --config webpack.config.js --mode development"
-
   },
   "keywords": [],
   "author": "",
@@ -26,6 +25,9 @@
     "mysql": "^2.18.1",
     "mysql2": "^3.6.1",
     "sequelize": "^6.33.0",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-node-externals": "^3.0.0"
   }
 }
