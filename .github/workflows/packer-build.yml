@@ -1,107 +1,186 @@
 name: Run packer build on a template file
+on:
+
+  push:
+
+    branches:
+
+        - main
+
+env:
+
+  PRODUCT_VERSION: "1.9.4"
+
+  AMI_REGION: ${{ vars.AMI_REGION }}
+
+  LOGIN_USERNAME: ${{ vars.LOGIN_USERNAME }}
+
+  INSTANCE_TYPE: ${{ vars.INSTANCE_TYPE }}
+
+  AMIOWNERID: ${{ vars.AMIOWNERID }}
+
+  AMISHAREDOWNER: ${{ vars.AMISHAREDOWNER }}
+
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  AWS_REGION: ${{ vars.AMI_REGION }}
+
+  PORT: ${{ vars.PORT }}
 
  
 
-on:
-  push:
-    branches:
-        - main
-env:
-  PRODUCT_VERSION: "1.9.4"
-  ami_region: ${{ vars.AMI_REGION }}
-  login_username: ${{ vars.LOGIN_USERNAME }}
-  typeOfInstance: ${{ vars.TYPEOFINSTANCE }}
-  sourceAMIOwner: ${{ vars.SOURCEAMIOWNER }}
-  AMIsharedOwnerID: ${{ vars.AMISHAREDOWNERID }}
-  DATABASE_HOST: ${{ vars.DATABASE_HOST }}
-  DATABASE_USER: ${{ vars.DATABASE_USER }}
-  DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}
-  DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+ 
 
 jobs:
+
   packer_build:
+
     runs-on: ubuntu-latest
+
     name: Build AMI Image
+
     env:
+
         DATABASE_HOST: ${{ vars.DATABASE_HOST }}
-        DATABASE_USER: ${{ vars.DATABASE_USER }}
-        DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}
+
+        DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
+
+        DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
+
         DATABASE_NAME: ${{ vars.DATABASE_NAME }}
 
+    
+
     strategy:
+
       matrix:
+
         node-version: [16.x]
 
  
 
     steps:
+
       - name: git checkout current repo code
+
         uses: actions/checkout@v4
 
-      - name: write variables into env file
-        run: |
-          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
-          echo "DATABASE_USER: ${{ vars.DATABASE_USER }}" >> .env
-          echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
-          echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
-          echo "below are environment variables"
-          cat .env
-        shell: bash
+      
 
       - name: install npm modules
+
         run: npm ci
 
  
 
       - name: fund npm
+
         run: npm fund
 
+      
+
       - name: Use Node.js ${{ matrix.node-version }}
+
         uses: actions/setup-node@v2
+
         with:
+
           node-version: ${{ matrix.node-version }}
+
           cache: 'npm'
 
+        
+
       - name: Start MySql Server
-        run: sudo systemctl start mysql
+
+        run: sudo systemctl start mysq
 
  
 
-      - name: Create database in the MySql server
-        run: sudo mysql --user=$DATABASE_USER --password=$DATABASE_PASSWORD -e "create database $DATABASE_NAME";
+      - name: zip the file
 
- 
+        uses: thedoctor0/zip-release@0.7.1
 
-      - name: Test webapp application
-        run: npm test
-
- 
-      - name: Run Integration tests
-        run: npm test
-      - name: Build Artifats
-        run: npm run build
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
         with:
-          name: my-repo
-          path: |
-            dist/main.js
-            .env
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
-          aws-region: us-east-1
-          aws-profile: github_user
-      - name: Install Packer
+
+          type: 'zip'
+
+          filename: 'webapp.zip'
+
+          exclusions: '*.git* /*node_modules/* '
+
+      
+
+      - name: write variables into env file
+
         run: |
-          wget https://releases.hashicorp.com/packer/1.8.5/packer_1.8.5_linux_amd64.zip
-          unzip packer_1.8.5_linux_amd64.zip
-          sudo mv packer /usr/local/bin/packer
-          packer --version
+
+          echo "DATABASE_HOST: ${{vars.DATABASE_HOST}}" >> .env
+
+          echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
+
+          echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
+
+          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+
+          echo "PORT: ${{ vars.PORT }}" >> .env
+
+          echo "below are environment variables"
+
+          cat .env
+
         shell: bash
-      - name: Init Packer
-        run: packer init ./aws-ubuntu.pkr.hcl
-      - name: Build Packer
-        run: packer build ./aws-ubuntu.pkr.hcl
+
+ 
+
+      - name: Setup `packer`
+
+        uses: hashicorp/setup-packer@main
+
+        id: setup
+
+        with:
+
+          version: ${{ env.PRODUCT_VERSION }}
+
+ 
+
+      - name: Check version of packer
+
+        run: packer -v
+
+      
+
+      - name: Add required plugins
+
+        run: packer init .
+
+ 
+
+      - name: format packer content
+
+        run: packer fmt .
+
+      
+
+      - name: validate packer
+
+        run: packer validate .
+
+      
+
+      - name: packer build
+
+        run: |
+
+          packer build -var "region=$AMI_REGION" \
+
+          -var "ssh_username=$LOGIN_USERNAME" \
+
+          -var "instance_type=$INSTANCE_TYPE" \
+
+          -var "ami_users=$AMISHAREDOWNER" \
+
+          -var "owners=$AMIOWNERID" aws-ubuntu.pkr.hcl
