@@ -1,4 +1,6 @@
-name: Packer Validation
+name: packer_validation
+
+ 
 
 on:
 
@@ -12,17 +14,15 @@ env:
 
   PRODUCT_VERSION: "1.9.4"
 
-  ami_name: ${{ secrets.AMI_NAME }}
+  AMI_REGION: ${{ vars.AMI_REGION }}
 
-  ami_region: ${{ secrets.AMI_REGION }}
+  LOGIN_USERNAME: ${{ vars.LOGIN_USERNAME }}
 
-  login_username: ${{ secrets.LOGIN_USERNAME }}
+  INSTANCE_TYPE: ${{ vars.INSTANCE_TYPE }}
 
-  typeOfInstance: ${{ secrets.TYPEOFINSTANCE }}
+  AMIOWNERID: ${{ vars.AMIOWNERID }}
 
-  sourceAMIOwner: ${{ secrets.SOURCEAMIOWNER }}
-
-  AMIsharedOwnerID: ${{ secrets.AMISHAREDOWNERID }}
+  AMISHAREDOWNER: ${{ vars.AMISHAREDOWNER }}
 
   DATABASE_HOST: ${{ vars.DATABASE_HOST }}
 
@@ -31,6 +31,8 @@ env:
   DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}
 
   DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+
+  echo "PORT: ${{ vars.PORT }}" >> .env
 
  
 
@@ -42,7 +44,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    name: Run Packer
+    name: packer_validation
 
     steps:
 
@@ -56,13 +58,23 @@ jobs:
 
         run: |
 
-          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+          echo "LOCAL_DATABASE_HOST: ${{ vars.LOCAL_DATABASE_HOST }}" >> .env
 
-          echo "DATABASE_USER: ${{ vars.DATABASE_USER }}" >> .env
+          echo "DATABASE_HOST: ${{vars.DATABASE_HOST}}" >> .env
+
+          echo "ROOT_DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}" >> .env
+
+          echo "ROOT_DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}" >> .env
+
+          echo "DATABASE_USER: ${{vars.DATABASE_USER}}" >> .env
 
           echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
 
           echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
+
+          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+
+          echo "PORT: ${{ vars.PORT }}" >> .env
 
           echo "below are environment variables"
 
