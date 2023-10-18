@@ -1,33 +1,133 @@
 name: Packer Validation
+
 on:
+
   pull_request:
-    paths:
-      - "aws-ubuntu.pkr.hcl"
-    types:
-      - opened
-      - synchronize
+
+    branches:
+
+      - main
+
+env:
+
+  PRODUCT_VERSION: "1.9.4"
+
+  ami_name: ${{ secrets.AMI_NAME }}
+
+  ami_region: ${{ secrets.AMI_REGION }}
+
+  login_username: ${{ secrets.LOGIN_USERNAME }}
+
+  typeOfInstance: ${{ secrets.TYPEOFINSTANCE }}
+
+  sourceAMIOwner: ${{ secrets.SOURCEAMIOWNER }}
+
+  AMIsharedOwnerID: ${{ secrets.AMISHAREDOWNERID }}
+
+  DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+
+  DATABASE_USER: ${{ vars.DATABASE_USER }}
+
+  DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}
+
+  DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+
+ 
+
+ 
+
 jobs:
-  packer_validation:
+
+  packer:
+
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    name: Run Packer
 
-      - name: Install Packer
+    steps:
+
+      - name: Checkout
+
+        uses: actions/checkout@v4
+
+ 
+
+      - name: write variables into env file
+
         run: |
-          wget https://releases.hashicorp.com/packer/1.8.5/packer_1.8.5_linux_amd64.zip
-          unzip packer_1.8.5_linux_amd64.zip
-          sudo mv packer /usr/local/bin/packer
-          packer --version
+
+          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+
+          echo "DATABASE_USER: ${{ vars.DATABASE_USER }}" >> .env
+
+          echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
+
+          echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
+
+          echo "below are environment variables"
+
+          cat .env
+
         shell: bash
 
-      - name: Install packer plugins
-        run: packer plugins install github.com/hashicorp/amazon
+ 
 
-      - name: Format and validate Packer Template
+      - name: Setup `packer`
+
+        uses: hashicorp/setup-packer@main
+
+        id: setup
+
+        with:
+
+          version: ${{ env.PRODUCT_VERSION }}
+
+      
+
+      - name: zip the file
+
+        uses: thedoctor0/zip-release@0.7.1
+
+        with:
+
+          type: 'zip'
+
+          filename: 'webapp.zip'
+
+          exclusions: '*.git* /*node_modules/* '
+
+ 
+
+      - name: Run `packer init`
+
+        id: init
+
+        run: "packer init ."
+
+ 
+
+      - name: Run packer fmt
+
         run: |
-          set -e
-          packer fmt -check aws-ubuntu.pkr.hcl
-          packer validate aws-ubuntu.pkr.hcl
-          echo "Packer formatting and validation check passed for aws-ubuntu.pkr.hcl"
+
+          if ! packer fmt -check aws-ubuntu.pkr.hcl; then
+
+            echo "Packer template is not properly formatted. Please run 'packer fmt' locally and commit the changes."
+
+            exit 1
+
+          fi
+
+ 
+
+      - name: Run packer validate
+
+        run: |
+
+          if ! packer validate aws-ubuntu.pkr.hcl; then
+
+            echo "Packer template validation failed. Please fix the issues and try again."
+
+            exit 1
+
+          fi
