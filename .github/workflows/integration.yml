@@ -1,107 +1,150 @@
-name: Node.js CI [Unit tests]
+# name: Node.js CI [Unit tests]
 
  
 
-on:
+# on:
 
-  pull_request:
+#   pull_request:
 
-    branches:
+#     branches:
 
-      - main
-
- 
-
-jobs:
-
-  tests:
-
-    runs-on: ubuntu-latest
-
-    env:
-
-        DATABASE_HOST: ${{ vars.DATABASE_HOST }}
-
-        DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
-
-        DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
-
-        DATABASE_NAME: ${{ vars.DATABASE_NAME }}
-
-        PORT: ${{vars.PORT}}
+#       - main
 
  
 
-    strategy:
+# jobs:
 
-      matrix:
+#   tests:
 
-        node-version: [16.x]
+#     runs-on: ubuntu-latest
 
-    steps:
+#     env:
 
-    - uses: actions/checkout@v2
+#         DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+
+#         DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
+
+#         DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
+
+#         DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+
+#         PORT: ${{vars.PORT}}
+
+ 
+
+#     strategy:
+
+#       matrix:
+
+#         node-version: [16.x]
+
+#     steps:
+
+#     - uses: actions/checkout@v2
 
     
 
-    - name: write variables into env file
+#     - name: write variables into env file
 
-      run: |
+#       run: |
 
-        echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+#         echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
 
-        echo "DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}" >> .env
+#         echo "DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}" >> .env
 
-        echo "DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}" >> .env
+#         echo "DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}" >> .env
 
-        echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
+#         echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
 
-        echo "PORT: ${{vars.PORT}}" >> .env
+#         echo "PORT: ${{vars.PORT}}" >> .env
 
-        echo "below are environment variables"
+#         echo "below are environment variables"
 
-        cat .env
+#         cat .env
 
-      shell: bash
-
- 
-
-    - name: install npm modules
-
-      run: npm ci
+#       shell: bash
 
  
 
-    - name: fund npm
+#     - name: install npm modules
 
-      run: npm fund
+#       run: npm ci
+
+ 
+
+#     - name: fund npm
+
+#       run: npm fund
 
        
 
-    - name: Use Node.js ${{ matrix.node-version }}
+#     - name: Use Node.js ${{ matrix.node-version }}
 
-      uses: actions/setup-node@v2
+#       uses: actions/setup-node@v2
 
-      with:
+#       with:
 
-        node-version: ${{ matrix.node-version }}
+#         node-version: ${{ matrix.node-version }}
 
-        cache: 'npm'
-
- 
-
-    - name: Start MySql Server
-
-      run: sudo systemctl start mysql
+#         cache: 'npm'
 
  
 
-    - name: Create database in the MySql server
+#     - name: Start MySql Server
 
-      run: sudo mysql --user=$DATABASE_USER --password=$DATABASE_PASSWORD -e "create database $DATABASE_NAME";
+#       run: sudo systemctl start mysql
 
  
 
-    - name: Test webapp application
+#     - name: Create database in the MySql server
 
-      run: npm test
+#       run: sudo mysql --user=$DATABASE_USER --password=$DATABASE_PASSWORD -e "create database $DATABASE_NAME";
+
+ 
+
+#     - name: Test webapp application
+
+#       run: npm test
+
+
+name: Node.js CI [Unit tests]
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: 'Bitspilani18#'
+          MYSQL_DATABASE: 'testing'
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run Node.js project
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until nc -z -v -w30 localhost 3306
+          do
+            echo "Waiting for MySQL to be ready..."
+            sleep 5
+          done
+
+      - name: Install project dependencies
+        run: npm install
+
+      - name: Run Integration tests 
+        run: npm test
