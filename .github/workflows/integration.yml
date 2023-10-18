@@ -1,147 +1,79 @@
-name: CI/CD test
+name: Node.js CI [Unit tests]
+
+ 
 
 on:
   pull_request:
     branches:
       - main
 
+ 
+
 jobs:
-  integration-test:
+  tests:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: 'Bitspilani18#'
-          MYSQL_DATABASE: 'testing'
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    env:
+        LOCAL_DATABASE_HOST: ${{ vars.LOCAL_DATABASE_HOST }}
+        DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+        ROOT_DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
+        ROOT_DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
+        DATABASE_USER: ${{vars.DATABASE_USER}}
+        DATABASE_PASSWORD: ${{vars.DATABASE_PASSWORD}}
+        DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+        DATABASE_HOST: ${{vars.DATABASE_HOST}}
+
+ 
+
+    strategy:
+      matrix:
+        node-version: [20.x]
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
-      - name: Run Node.js project
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
+    
+    - name: write variables into env file
 
-      - name: Wait for MySQL to be ready
-        run: |
-          until nc -z -v -w30 localhost 3306
-          do
-            echo "Waiting for MySQL to be ready..."
-            sleep 5
-          done
+      run: |
 
-      - name: Install project dependencies
-        run: npm install
-      - name: Set up .env
-        run: |
-         echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
-         cat .env
-        shell: bash
+        echo "LOCAL_DATABASE_HOST: ${{ vars.LOCAL_DATABASE_HOST }}" >> .env
+        echo "DATABASE_HOST: ${{vars.DATABASE_HOST}}" >> .env
+        echo "ROOT_DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}" >> .env
+        echo "ROOT_DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}" >> .env
+        echo "DATABASE_USER: ${{vars.DATABASE_USER}}" >> .env
+        echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
+        echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
+        echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+        echo "below are environment variables"
+        cat .env
+      shell: bash
 
-      - name: Run Integration tests
-        run: npm test
-      - name: Build Artifats
-        run: npm run build
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: my-repo
-          path: |
-            dist/main.js
-            .env
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
-          aws-region: us-east-1
-          aws-profile: github_user
-      - name: Install Packer
-        run: |
-          wget https://releases.hashicorp.com/packer/1.8.5/packer_1.8.5_linux_amd64.zip
-          unzip packer_1.8.5_linux_amd64.zip
-          sudo mv packer /usr/local/bin/packer
-          packer --version
-        shell: bash
-      - name: Init Packer
-        run: packer init ./aws-ubuntu.pkr.hcl
-      - name: Build Packer
-        run: packer build ./aws-ubuntu.pkr.hcl
+    - name: install npm modules
+      run: npm ci
 
-# name: Integration Test
+    - name: fund npm
 
-# on:
+      run: npm fund
 
-#   pull_request:
+    - name: Use Node.js ${{ matrix.node-version }}
 
-#     branches:
+      uses: actions/setup-node@v2
 
-#       - main
+      with:
 
-# jobs:
+        node-version: ${{ matrix.node-version }}
 
-#   integration-test:
+        cache: 'npm'
 
-#     runs-on: ubuntu-latest
+    - name: Start MySql Server
 
-#     services:
+      run: sudo systemctl start mysql
 
-#       mysql:
+    - name: Create database in the MySql server
 
-#         image: mysql:latest
+      run: sudo mysql --user=$ROOT_DATABASE_USER --password=$ROOT_DATABASE_PASSWORD -e "create database $DATABASE_NAME";
 
-#         env:
+    - name: Test webapp application
 
-#           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      run: npm test
 
-#           MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-
-#         ports:
-
-#           - 3306:3306
-
-#         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
-#     steps:
-
-#       - name: Checkout Code
-
-#         uses: actions/checkout@v2
-
-#       - name: Run Node.js project
-
-#         uses: actions/setup-node@v3
-
-#         with:
-
-#           node-version: 20
-
-#       - name: Wait for MySQL to be ready
-
-#         run: |
-
-#           until nc -z -v -w30 localhost 3306
-
-#           do
-
-#             echo "Waiting for MySQL to be ready..."
-
-#             sleep 5
-
-#           done
-
-#       - name: Set up .env
-
-#         run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
-
-#       - name: Install project dependencies
-
-#         run: npm install
-
-#       - name: Run Integration tests
-
-#         run: npm test
+      
