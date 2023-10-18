@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test.js --exit"
+    "start": "nodemon dist/main.js",
+    "test": "mocha test.js --exit",
+    "build": "webpack --config webpack.config.js --mode development"
+
   },
   "keywords": [],
   "author": "",
