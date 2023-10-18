@@ -95,7 +95,7 @@ jobs:
 
       - name: Start MySql Server
 
-        run: sudo systemctl start mysq
+        run: sudo systemctl start mysql
 
  
 
