@@ -13,10 +13,14 @@ const MappingModels = require('../models/MappingModels');
 router.get('/', async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
+        
+        // If no authorization header, return assignments data
         if (!authHeader || !authHeader.startsWith('Basic ')) {
-            return res.status(401).json({ error: 'Authorization header is missing or incorrect' });
+            const assignments = await Assignment.findAll();
+            return res.status(200).json(assignments);
         }
 
+        // Extract user credentials from header
         const credentials = Buffer.from(authHeader.split(' ')[1], 'base64').toString('utf-8');
         const [email, password] = credentials.split(':');
 
@@ -42,10 +46,11 @@ router.get('/', async (req, res) => {
 
         res.status(200).json(userDetails);
     } catch (error) {
-        console.error(`Error fetching user details: ${error.message}`);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error(`Error fetching data: ${error.message}`);
+        res.status(403).json({ error: 'Unable to fetch data' });
     }
 });
+
 
 
 // Method to Post Data into the server
@@ -94,7 +99,7 @@ router.post('/', async (req, res) => {
         res.status(201).json(assignment);
     } catch (error) {
         console.error(`Error creating assignment: ${error.message}`);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(401).json({ error: 'Bad request' });
     }
    
 });
@@ -154,7 +159,7 @@ router.put('/:id', async (req, res) => {
         res.status(204).send();
     } catch (error) {
         console.error(`Error updating assignment: ${error.message}`);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(403).json({ error: 'Forbidden' });
     }
 });
 
@@ -218,7 +223,7 @@ router.get('/:id', async (req, res) => {
         res.status(200).json(assignment);
     } catch (error) {
         console.error(`Error fetching assignment by ID: ${error.message}`);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(401).json({ error: 'Bad request' });
     }
 });
 
