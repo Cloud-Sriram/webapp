@@ -71,21 +71,8 @@ build {
 
 
 
-  provisioner "shell" {
-
-    inline = [
-
-      "sudo apt update",
-      "sudo apt install -y mariadb-server",
-      "sudo systemctl start mariadb",
-      "sudo systemctl enable mariadb",
-      "sudo mysql -u root <<EOF",
-      "ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';",
-      "FLUSH PRIVILEGES;",
-      "EOF",
-      "sudo apt update",
-      "sudo apt install -y nodejs npm",
-    ]
+   provisioner "shell" {
+    script = "./install.sh"
   }
 
 
