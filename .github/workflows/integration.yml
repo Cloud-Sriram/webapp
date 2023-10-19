@@ -121,15 +121,12 @@ on:
 jobs:
   integration-test:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: 'root'
-          MYSQL_DATABASE: 'testing'
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    env:
+        DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+        DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
+        DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
+        DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+        PORT: ${{vars.PORT}}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -138,17 +135,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
+      
+      - name: Start MySql Server
+        run: sudo systemctl start mysql
 
-      - name: Wait for MySQL to be ready
-        run: |
-          until nc -z -v -w30 localhost 3306
-          do
-            echo "Waiting for MySQL to be ready..."
-            sleep 5
-          done
+      - name: Create database in the MySql server
+        run: sudo mysql --user=$DATABASE_USER --password=$DATABASE_PASSWORD -e "create database $DATABASE_NAME";
 
       - name: Install project dependencies
         run: npm install
+      
+      - name: install npm ci
+        run: npm ci && npm fund
 
       - name: Run Integration tests 
         run: npm test
