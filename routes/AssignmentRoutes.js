@@ -7,6 +7,7 @@ const bcrypt=require('bcrypt')
 const app = express();
 app.use(express.json());
 const MappingModels = require('../models/MappingModels');
+const { request } = require('express');
 
 // . Get request to get User Validation
 
@@ -16,8 +17,8 @@ router.get('/', async (req, res) => {
         
         // If no authorization header, return assignments data
         if (!authHeader || !authHeader.startsWith('Basic ')) {
-            const assignments = await Assignment.findAll();
-            return res.status(200).json(assignments);
+            // const assignments = await Assignment.findAll();
+            return res.status(401).json({error: "Unauthenticated" });
         }
 
         // Extract user credentials from header
@@ -33,7 +34,7 @@ router.get('/', async (req, res) => {
         if (!isPasswordValid) {
             return res.status(403).json({ error: 'Authentication failed. Invalid password.' });
         }
-
+        const assignments = await Assignment.findAll();
         // Extracting only the necessary fields for privacy reasons (omitting the password field)
         const userDetails = {
             id: user.id,
@@ -44,7 +45,7 @@ router.get('/', async (req, res) => {
             account_updated: user.account_updated
         };
 
-        res.status(200).json(userDetails);
+        res.status(200).json(assignments);
     } catch (error) {
         console.error(`Error fetching data: ${error.message}`);
         res.status(403).json({ error: 'Unable to fetch data' });
@@ -99,7 +100,7 @@ router.post('/', async (req, res) => {
         res.status(201).json(assignment);
     } catch (error) {
         console.error(`Error creating assignment: ${error.message}`);
-        res.status(401).json({ error: 'Bad request' });
+        res.status(400).json({ error: 'Bad request' });
     }
    
 });
@@ -213,19 +214,40 @@ router.delete('/:id', async (req, res) => {
 // New GET request for fetching an assignment by ID
 router.get('/:id', async (req, res) => {
     try {
-        const assignmentId = req.params.id;
-        const assignment = await Assignment.findByPk(assignmentId);
+        const authHeader = req.headers['authorization'];
 
-        if (!assignment) {
-            return res.status(404).json({ error: 'Assignment not found' });
+        if (!authHeader || !authHeader.startsWith('Basic ')) {
+            return res.status(401).json({error: "Unauthenticated" });
         }
 
-        res.status(200).json(assignment);
+        const credentials = Buffer.from(authHeader.split(' ')[1], 'base64').toString('utf-8');
+        const [email, password] = credentials.split(':');
+
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(403).json({ error: 'Authentication failed. User not found.' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(403).json({ error: 'Authentication failed. Invalid password.' });
+        }
+
+        const assignmentId = req.params.id;
+        const assignments = await Assignment.findByPk(assignmentId);
+
+        // Check if assignment is null and return a 403 Forbidden if it is
+        if (!assignments) {
+            return res.status(403).json({ error: 'Assignment not found' });
+        }
+
+        res.status(200).json(assignments);
     } catch (error) {
-        console.error(`Error fetching assignment by ID: ${error.message}`);
-        res.status(401).json({ error: 'Bad request' });
+        console.error(`Error fetching data: ${error.message}`);
+        res.status(403).json({ error: 'Unable to fetch data' });
     }
 });
+
 
 
 // Remaining methods should return 405
