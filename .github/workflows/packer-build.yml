@@ -171,12 +171,9 @@ jobs:
 
       - name: packer build
 
-        run: packer build -var "region=$AMI_REGION" aws-ubuntu.pkr.hcl
-
-          # -var "ssh_username=$LOGIN_USERNAME" \
-
-          # -var "instance_type=$INSTANCE_TYPE" \
-
-          # -var "ami_users=$AMISHAREDOWNER" \
-
-          # -var "owners=$AMIOWNERID" aws-ubuntu.pkr.hcl
+        run: | 
+          packer build -var "region=$AMI_REGION" \
+          -var "ssh_username=$LOGIN_USERNAME" \
+          -var "instance_type=$INSTANCE_TYPE" \
+          -var "ami_users=$AMISHAREDOWNER" \
+          -var "owners=$AMIOWNERID" aws-ubuntu.pkr.hcl
