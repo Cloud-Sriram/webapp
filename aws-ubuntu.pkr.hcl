@@ -64,6 +64,11 @@ build {
     "source.amazon-ebs.debian"
   ]
 
+  provisioner "file" {
+    source      = "./webapp.zip"
+    destination = "/home/admin/webapp.zip"
+  }
+
 
 
   provisioner "shell" {
