@@ -75,6 +75,11 @@ build {
     script = "./install.sh"
   }
 
+  provisioner "file" {
+    source      = "./webapp.service"
+    destination = "/tmp/webapp.service"
+  }
+
 
 
 }
