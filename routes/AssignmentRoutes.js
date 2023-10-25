@@ -76,6 +76,10 @@ router.post('/', async (req, res) => {
         }
  
         const { title, points, num_of_attempts, deadline } = req.body;
+        const numericPoints = Number(points);
+        if (!Number.isInteger(numericPoints)) {
+            return res.status(400).json({ error: 'Points should be an integer.' });
+        }
         if(!(points > 0 && points <= 10)) {
             return res.status(400).json({error: 'The points should be between 1 and 10 (inclusive)'});
         }
@@ -206,7 +210,7 @@ router.delete('/:id', async (req, res) => {
         res.status(204).json({ message: 'Assignment deleted successfully' });
     } catch (error) {
         console.error(`Error deleting assignment: ${error.message}`);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(400).json({ error: 'Bad request' });
     }
 });
  
