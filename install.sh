@@ -1,3 +1,4 @@
+[3:10 AM] Sriram Voruganti
 # sleep 30
 # sudo apt update
 # sudo apt install nodejs
@@ -93,10 +94,13 @@ sudo useradd -m -p $(openssl passwd -1 password) webapp
 sudo mkdir /home/webapp/webapp
  
 sudo cp /home/admin/webapp.zip /home/webapp/webapp/
+sudo ls -ltrah /home/webapp
+sudo unzip /home/webapp/webapp/webapp.zip
  
-sudo unzip -d /home/webapp/webapp/webapp.zip
+sudo ls -ltrah /home/webapp/webapp
  
 echo "check webapp.zip"
+ 
 sudo ls -ltrah /home/webapp/
 # rm -r .env
 # cat <<EOL > .env
@@ -120,6 +124,8 @@ npm install --save
  
 npm fund
  
+sudo ls -ltrah /home/webapp/webapp
+ 
 # echo "DATABASE_HOST: mohan.c4tltzid5dl3.us-east-1.rds.amazonaws.com" >> ~/webapp/.env
  
 # echo "DATABASE_USER: mohan" >> ~/webapp/.env
@@ -139,7 +145,7 @@ cd /home/webapp/
 sudo chown -R webapp:webapp webapp
  
 cd /home/admin
- 
+sudo ls -ltrah /home/webapp
 sudo mv /tmp/webapp.service /etc/systemd/system/webapp.service
  
 sudo systemctl daemon-reload
