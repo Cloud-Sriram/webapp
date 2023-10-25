@@ -69,16 +69,16 @@ build {
     destination = "/home/admin/webapp.zip"
   }
 
-
+  provisioner "file" {
+    source      = "./webapp.service"
+    destination = "/tmp/webapp.service"
+  }
 
   provisioner "shell" {
     script = "./install.sh"
   }
 
-  provisioner "file" {
-    source      = "./webapp.service"
-    destination = "/tmp/webapp.service"
-  }
+
 
 
 
