@@ -86,6 +86,7 @@ curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt-get install -y nodejs
 node -v
 
+sudo useradd -m -p $(openssl passwd -1 password) webapp
 
 # sudo mysql -u root -e "SHOW DATABASES";
 
