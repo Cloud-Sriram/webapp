@@ -123,9 +123,9 @@ ls -ltrah
  
 cd /home/admin/
  
+sudo chmod -R 744 /home/webappuser/webapp
  
- 
-#sudo chown -R webapp:webapp webapp
+sudo chown -R webappuser:webappuser /home/webappuser/webapp
  
  
  
