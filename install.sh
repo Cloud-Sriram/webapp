@@ -1,4 +1,3 @@
-[3:10 AM] Sriram Voruganti
 # sleep 30
 # sudo apt update
 # sudo apt install nodejs
@@ -95,6 +94,8 @@ sudo mkdir /home/webapp/webapp
  
 sudo cp /home/admin/webapp.zip /home/webapp/webapp/
 sudo ls -ltrah /home/webapp
+sudo ls -ltrah /home/webapp/webapp/
+cd /home/webapp/webapp/
 sudo unzip /home/webapp/webapp/webapp.zip
  
 sudo ls -ltrah /home/webapp/webapp
@@ -160,4 +161,3 @@ sleep 20
 sudo systemctl status webapp
  
 sudo echo $?
-has context menu
