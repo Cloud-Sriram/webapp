@@ -12,6 +12,9 @@ const { request } = require('express');
 // . Get request to get User Validation
  
 router.get('/', async (req, res) => {
+    if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+        return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
+    }
     try {
         const authHeader = req.headers['authorization'];
         
@@ -27,12 +30,12 @@ router.get('/', async (req, res) => {
  
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.status(403).json({ error: 'Authentication failed. User not found.' });
+            return res.status(401).json({ error: 'Authentication failed. User not found.' });
         }
  
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(403).json({ error: 'Authentication failed. Invalid password.' });
+            return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
         const assignments = await Assignment.findAll();
         // Extracting only the necessary fields for privacy reasons (omitting the password field)
@@ -122,11 +125,11 @@ router.put('/:id', async (req, res) => {
         const [email, password] = credentials.split(':');
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            return res.status(403).json({ error: 'Authentication failed. User not found.' });
+            return res.status(401).json({ error: 'Authentication failed. User not found.' });
         }
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(403).json({ error: 'Authentication failed. Invalid password.' });
+            return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
  
         const assignmentId = req.params.id;
@@ -172,6 +175,9 @@ router.put('/:id', async (req, res) => {
 // Delete Assignment for a particular id
 router.delete('/:id', async (req, res) => {
     console.log('Request to delete assignment with ID', req.params.id);
+    if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+        return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
+    }
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
