@@ -5,14 +5,14 @@ Wants=cloud-init.target
  
  
 [Service]
-WorkingDirectory=/home/webappuser/webapp
-ExecStart=/usr/bin/node /home/webappuser/webapp/app.js
+WorkingDirectory=/home/webapp/webapp
+ExecStart=/usr/bin/node /home/webapp/webapp/server.js
 Restart=always
 RestartSec=10
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=webapp
-User=webappuser
+User=webapp
  
  
 [Install]
