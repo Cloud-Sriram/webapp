@@ -76,20 +76,13 @@ build {
 
   provisioner "file" {
     source      = "./amazon-cloudwatch-agent.json"
-    destination = "/opt/amazon-cloudwatch-agent.json"
+    destination = "/tmp/amazon-cloudwatch-agent.json"
   }
 
   provisioner "shell" {
     script = "./install.sh"
   }
 
-  provisioner "shell" {
-    inline = [
-      "sudo mv /home/admin/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
-      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop",
-      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start"
-    ]
-  }
 
 
 
