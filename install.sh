@@ -159,6 +159,13 @@ sudo systemctl status webapp
  
 sudo echo $?
 
+echo "Installing Amazon CloudWatch Agent..."
+curl -s https://s3.amazonaws.com/amazoncloudwatch-agent/debian/amd64/latest/amazon-cloudwatch-agent.deb -o /tmp/amazon-cloudwatch-agent.deb
+sudo dpkg -i /tmp/amazon-cloudwatch-agent.deb
+
+# Move the CloudWatch agent config file into place
 sudo mv /tmp/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+# Start the CloudWatch agent
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start
