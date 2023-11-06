@@ -31,6 +31,16 @@ sudo useradd -m -p $(openssl passwd -1 password) webappuser
 sudo cat /etc/passwd
  
  
+sudo wget https://amazoncloudwatch-agent.s3.amazonaws.com/debian/amd64/latest/amazon-cloudwatch-agent.deb
+ 
+echo "downloaded cloud watch"
+ 
+sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+ 
+echo "unpacked cloudwatch"
+ 
+sudo mv /tmp/amazon-cloudwatch-agent.json /opt/amazon-cloudwatch-agent.json
+ 
 sudo pwd
  
  
@@ -158,14 +168,3 @@ sudo systemctl status webapp
  
  
 sudo echo $?
-
-echo "Installing Amazon CloudWatch Agent..."
-curl -s https://s3.amazonaws.com/amazoncloudwatch-agent/debian/amd64/latest/amazon-cloudwatch-agent.deb -o /tmp/amazon-cloudwatch-agent.deb
-sudo dpkg -i /tmp/amazon-cloudwatch-agent.deb
-
-# Move the CloudWatch agent config file into place
-sudo mv /tmp/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-
-# Start the CloudWatch agent
-sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
-sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start
