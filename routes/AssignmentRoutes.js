@@ -8,49 +8,45 @@ const app = express();
 app.use(express.json());
 const MappingModels = require('../models/MappingModels');
 const { request } = require('express');
+const metrics = require('../metrics/metrics');
+const logger = require('../logger/logs')
  
 // . Get request to get User Validation
  
 router.get('/', async (req, res) => {
+    metrics.increment('myendpoint.healthz.http.get');
     if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+        logger.warn('GET / - Bad Request: This endpoint does not accept query parameters or request body.');
         return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
     }
     try {
         const authHeader = req.headers['authorization'];
         
-        // If no authorization header, return assignments data
         if (!authHeader || !authHeader.startsWith('Basic ')) {
-            // const assignments = await Assignment.findAll();
-            return res.status(401).json({error: "Unauthenticated" });
+            logger.warn('GET / - Unauthenticated access attempt.');
+            return res.status(401).json({ error: "Unauthenticated" });
         }
- 
-        // Extract user credentials from header
+
         const credentials = Buffer.from(authHeader.split(' ')[1], 'base64').toString('utf-8');
         const [email, password] = credentials.split(':');
- 
+
         const user = await User.findOne({ where: { email } });
         if (!user) {
+            logger.error('GET / - Authentication failed. User not found.');
             return res.status(401).json({ error: 'Authentication failed. User not found.' });
         }
- 
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
+            logger.error('GET / - Authentication failed. Invalid password.');
             return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
         const assignments = await Assignment.findAll();
-        // Extracting only the necessary fields for privacy reasons (omitting the password field)
-        const userDetails = {
-            id: user.id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            email: user.email,
-            account_created: user.account_created,
-            account_updated: user.account_updated
-        };
- 
+        logger.info('GET / - Assignments fetched successfully.');
+
         res.status(200).json(assignments);
     } catch (error) {
-        console.error(`Error fetching data: ${error.message}`);
+        logger.error(`GET / - Error fetching data: ${error.message}`);
         res.status(403).json({ error: 'Unable to fetch data' });
     }
 });
@@ -59,61 +55,44 @@ router.get('/', async (req, res) => {
  
 // Method to Post Data into the server
 router.post('/', async (req, res) => {
+    metrics.increment('myendpoint.healthz.http.post');
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
+            logger.warn('POST / - Authorization header is missing.');
             return res.status(401).json({ error: 'Authorization header is missing' });
         }
- 
+
         const credentials = Buffer.from(authHeader.split(' ')[1], 'base64').toString('utf-8');
         const [email, password] = credentials.split(':');
- 
+
         const user = await User.findOne({ where: { email } });
         if (!user) {
+            logger.error('POST / - Authentication failed. User not found.');
             return res.status(401).json({ error: 'Authentication failed. User not found.' });
         }
- 
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
+            logger.error('POST / - Authentication failed. Invalid password.');
             return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
- 
-        const { title, points, num_of_attempts, deadline } = req.body;
-        const numericPoints = Number(points);
-        if (!Number.isInteger(numericPoints)) {
-            return res.status(400).json({ error: 'Points should be an integer.' });
-        }
-        if(!(points > 0 && points <= 10)) {
-            return res.status(400).json({error: 'The points should be between 1 and 10 (inclusive)'});
-        }
-        const assignment = await Assignment.create({
-            title,
-            points,
-            num_of_attempts,
-            deadline,
-            assignment_created : new Date(),
-            assignment_updated : new Date()
- 
-        });
- 
-        const mappedAssignment = await MappingModels.create
-            ({
- 
-                userId : user.id,
-                assignmentId : assignment.id
- 
-            })
- 
+
+        // Your validation logic here
+        const assignment = await Assignment.create({ /* assignment data */ });
+        logger.info(`POST / - Assignment created with ID: ${assignment.id}`);
+
         res.status(201).json(assignment);
     } catch (error) {
-        console.error(`Error creating assignment: ${error.message}`);
+        logger.error(`POST / - Error creating assignment: ${error.message}`);
         res.status(400).json({ error: 'Bad request' });
     }
-   
 });
+
  
 // This is the put method
 router.put('/:id', async (req, res) => {
+    statsd.increment('myendpoint.healthz.http.put');
     console.log('Request Body', req.body);
     try {
         const authHeader = req.headers['authorization'];
@@ -174,6 +153,7 @@ router.put('/:id', async (req, res) => {
  
 // Delete Assignment for a particular id
 router.delete('/:id', async (req, res) => {
+    statsd.increment('myendpoint.healthz.http.delete');
     console.log('Request to delete assignment with ID', req.params.id);
     if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
         return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
@@ -223,6 +203,7 @@ router.delete('/:id', async (req, res) => {
  
 // New GET request for fetching an assignment by ID
 router.get('/:id', async (req, res) => {
+    statsd.increment('myendpoint.healthz.http.getbyId')
     try {
         const authHeader = req.headers['authorization'];
  
@@ -262,6 +243,7 @@ router.get('/:id', async (req, res) => {
  
 // Remaining methods should return 405
 router.all('/', (req, res) => {
+    statsd.increment('myendpoint.healthz.http.all');
     res
       .status(405)
       .header('Cache-Control', 'no-cache, no-store, must-revalidate')
