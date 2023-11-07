@@ -54,6 +54,7 @@ router.get('/', async (req, res) => {
  
  
 // Method to Post Data into the server
+// Method to Post Data into the server
 router.post('/', async (req, res) => {
     metrics.increment('myendpoint.healthz.http.post');
     try {
@@ -62,26 +63,26 @@ router.post('/', async (req, res) => {
             logger.warn('POST / - Authorization header is missing.');
             return res.status(401).json({ error: 'Authorization header is missing' });
         }
-
+ 
         const credentials = Buffer.from(authHeader.split(' ')[1], 'base64').toString('utf-8');
         const [email, password] = credentials.split(':');
-
+ 
         const user = await User.findOne({ where: { email } });
         if (!user) {
             logger.error('POST / - Authentication failed. User not found.');
             return res.status(401).json({ error: 'Authentication failed. User not found.' });
         }
-
+ 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             logger.error('POST / - Authentication failed. Invalid password.');
             return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
-
+ 
         // Your validation logic here
         const assignment = await Assignment.create({ /* assignment data */ });
         logger.info(`POST / - Assignment created with ID: ${assignment.id}`);
-
+ 
         res.status(201).json(assignment);
     } catch (error) {
         logger.error(`POST / - Error creating assignment: ${error.message}`);
