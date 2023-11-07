@@ -17,8 +17,8 @@ app.use('/v1/assignments', assignment_Routes);
 //Assignment-1 Related Work
 
 app.get('/healthz', (req, res) => {
-    if((Object.keys(req.body).length > 0) || (Object.keys(req.query).length > 0)){
-      logger.info("This is a healthz checkpoint");  
+    logger.info("This is a healthz checkpoint"); 
+    if((Object.keys(req.body).length > 0) || (Object.keys(req.query).length > 0)){ 
       return res.status(400).json();
       }
   db.checkDbConnection((err, isConnected) => {
