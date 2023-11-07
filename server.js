@@ -10,7 +10,6 @@ const {router: Assignment} = require('./routes/AssignmentRoutes');
 const assignment_Routes = require('./routes/AssignmentRoutes');
 const db = require('./mydb.js');
 const logger = require('./logger/logs')
-
 app.use(express.json());
 app.use('/v1/assignments', assignment_Routes);
 
