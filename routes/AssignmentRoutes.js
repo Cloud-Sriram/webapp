@@ -92,8 +92,7 @@ router.post('/', async (req, res) => {
  
 // This is the put method
 router.put('/:id', async (req, res) => {
-    statsd.increment('myendpoint.healthz.http.put');
-    console.log('Request Body', req.body);
+    metrics.increment('myendpoint.healthz.http.put');
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
@@ -142,10 +141,10 @@ router.put('/:id', async (req, res) => {
         assignment.deadline = deadline;
  
         await assignment.save();
- 
+        logger.info(`PUT /${req.params.id} - Assignment updated successfully.`);
         res.status(204).send();
     } catch (error) {
-        console.error(`Error updating assignment: ${error.message}`);
+        logger.error(`Error updating assignment: ${error.message}`);
         res.status(403).json({ error: 'Forbidden' });
     }
 });
@@ -153,8 +152,7 @@ router.put('/:id', async (req, res) => {
  
 // Delete Assignment for a particular id
 router.delete('/:id', async (req, res) => {
-    statsd.increment('myendpoint.healthz.http.delete');
-    console.log('Request to delete assignment with ID', req.params.id);
+    metrics.increment('myendpoint.healthz.http.delete');
     if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
         return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
     }
@@ -193,9 +191,10 @@ router.delete('/:id', async (req, res) => {
         }
  
         await assignment.destroy();
+        logger.info(`DELETE /${req.params.id} - Assignment deleted successfully.`);
         res.status(204).json({ message: 'Assignment deleted successfully' });
     } catch (error) {
-        console.error(`Error deleting assignment: ${error.message}`);
+        logger.error(`DELETE /${req.params.id} - Error deleting assignment: ${error.message}`);
         res.status(400).json({ error: 'Bad request' });
     }
 });
@@ -203,8 +202,9 @@ router.delete('/:id', async (req, res) => {
  
 // New GET request for fetching an assignment by ID
 router.get('/:id', async (req, res) => {
-    statsd.increment('myendpoint.healthz.http.getbyId')
+    metrics.increment('myendpoint.healthz.http.getbyId')
     try {
+
         const authHeader = req.headers['authorization'];
  
         if (!authHeader || !authHeader.startsWith('Basic ')) {
@@ -231,10 +231,10 @@ router.get('/:id', async (req, res) => {
         if (!assignments) {
             return res.status(403).json({ error: 'Assignment not found' });
         }
- 
+        logger.info(`GET /${req.params.id} - Assignment fetched successfully.`);
         res.status(200).json(assignments);
     } catch (error) {
-        console.error(`Error fetching data: ${error.message}`);
+        logger.error(`Error fetching data: ${error.message}`);
         res.status(403).json({ error: 'Unable to fetch data' });
     }
 });
@@ -243,7 +243,8 @@ router.get('/:id', async (req, res) => {
  
 // Remaining methods should return 405
 router.all('/', (req, res) => {
-    statsd.increment('myendpoint.healthz.http.all');
+    metrics.increment('myendpoint.healthz.http.all');
+    logger.warn('ALL / - Method not allowed.');
     res
       .status(405)
       .header('Cache-Control', 'no-cache, no-store, must-revalidate')
