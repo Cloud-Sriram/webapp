@@ -15,9 +15,13 @@ const logger = require('../logger/logs')
  
 router.get('/', async (req, res) => {
     metrics.increment('myendpoint.get.method');
-    if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
-        logger.warn('GET / - Bad Request: This endpoint does not accept query parameters or request body.');
-        return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
+    // if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+    //     logger.warn('GET / - Bad Request: This endpoint does not accept query parameters or request body.');
+    //     return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
+    // }
+    if (req.headers['content-length'] || req.headers['transfer-encoding'] || Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+        logger.warn("GET / - Bad Request: This endpoint does not accept query parameters or request body.");
+        return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.'});
     }
     try {
         const authHeader = req.headers['authorization'];
@@ -52,8 +56,6 @@ router.get('/', async (req, res) => {
 });
  
  
- 
-// Method to Post Data into the server
 // Method to Post Data into the server
 router.post('/', async (req, res) => {
     metrics.increment('myendpoint.post.method');
@@ -81,12 +83,32 @@ router.post('/', async (req, res) => {
  
         const { title, points, num_of_attempts, deadline } = req.body;
         const numericPoints = Number(points);
-        if (!Number.isInteger(numericPoints)) {
-            return res.status(400).json({ error: 'Points should be an integer.' });
+        const numericNumOfAttempts = Number(num_of_attempts);
+        if (!Number.isInteger(numericNumOfAttempts)) {
+            logger.error('POST / - Number of attempts should be an integer.');
+            return res.status(400).json({ error: 'Number of attempts should be an integer.' });
         }
         if(!(points > 0 && points <= 10)) {
+            logger.error('POST / - Numeric Points should be an integer.');
             return res.status(400).json({error: 'The points should be between 1 and 10 (inclusive)'});
         }
+
+        const numeric_Points = Number(points);
+        if (!Number.isInteger(numeric_Points)) {
+            logger.error('POST / - Points should be an integer.');
+            return res.status(400).json({ error: 'Points should be an integer.' });
+        }
+
+        // const numericNumOfAttempts = Number(num_of_attempts);
+        // if (!Number.isInteger(numericNumOfAttempts)) {
+        //     return res.status(400).json({ error: 'Number of attempts should be an integer.' });
+        // }
+
+        if (!deadline || isNaN(new Date(deadline).getTime())) {
+            logger.error('POST / - Datetime should be valid.');
+            return res.status(400).json({ error: 'Deadline should be a valid datetime string.' });
+        }
+
         const assignment = await Assignment.create({
             title,
             points,
@@ -119,6 +141,7 @@ router.put('/:id', async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
+            logger.warn('Put / - U: This endpoint does not accept query parameters or request body.');
             return res.status(401).json({ error: 'Authorization header is missing' });
         }
  
@@ -126,10 +149,12 @@ router.put('/:id', async (req, res) => {
         const [email, password] = credentials.split(':');
         const user = await User.findOne({ where: { email } });
         if (!user) {
+            logger.error(`PUT request: User not found`);
             return res.status(401).json({ error: 'Authentication failed. User not found.' });
         }
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
+            logger.error(`PUT request: Password Invalid `);
             return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
  
@@ -176,12 +201,14 @@ router.put('/:id', async (req, res) => {
 // Delete Assignment for a particular id
 router.delete('/:id', async (req, res) => {
     metrics.increment('myendpoint.delete.method');
-    if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
-        return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
+    if (req.headers['content-length'] || req.headers['transfer-encoding'] || Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+        logger.error("DELETE / - Bad Request: This endpoint does not accept query parameters or request body.");
+        return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.'});
     }
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
+            logger.warn(`DELETE request: Authorization missing`);
             return res.status(401).json({ error: 'Authorization header is missing' });
         }
  
@@ -190,11 +217,13 @@ router.delete('/:id', async (req, res) => {
  
         const user = await User.findOne({ where: { email } });
         if (!user) {
+            logger.error(`Delete request: User Invalid `);
             return res.status(403).json({ error: 'Authentication failed. User not found.' });
         }
  
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
+            logger.error(`Delete request: Password Invalid `);
             return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
  
@@ -210,6 +239,7 @@ router.delete('/:id', async (req, res) => {
  
         // Check if the assignment belongs to the authenticated user
         if (mapped_assignment_id !== user.id) {
+            logger.warn(`DELETE Request, we cannot update the assignment.`);
             return res.status(403).json({ error: 'You do not have permission to delete this assignment.' });
         }
  
@@ -225,7 +255,11 @@ router.delete('/:id', async (req, res) => {
  
 // New GET request for fetching an assignment by ID
 router.get('/:id', async (req, res) => {
-    metrics.increment('myendpoint.getbyId.method')
+    metrics.increment('myendpoint.getbyId.method');
+    if (req.headers['content-length'] || req.headers['transfer-encoding'] || Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+        logger.warn("GETbyID / - Bad Request: This endpoint does not accept query parameters or request body.");
+        return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.'});
+    }
     try {
 
         const authHeader = req.headers['authorization'];
@@ -268,7 +302,7 @@ router.all('/v1/assignments/:id', (req, res) => {
  
 // Remaining methods should return 405
 router.all('/', (req, res) => {
-    metrics.increment('myendpoint.healthz.http.all');
+    metrics.increment('myendpoint.all');
     logger.warn('ALL / - Method not allowed.');
     res
       .status(405)
