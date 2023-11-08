@@ -9,7 +9,8 @@ const bcrypt = require('bcryptjs');
 const {router: Assignment} = require('./routes/AssignmentRoutes');
 const assignment_Routes = require('./routes/AssignmentRoutes');
 const db = require('./mydb.js');
-const logger = require('./logger/logs')
+const logger = require('./logger/logs');
+const metrics = require('./metrics/metrics');
 app.use(express.json());
 app.use('/v1/assignments', assignment_Routes);
 
@@ -17,6 +18,7 @@ app.use('/v1/assignments', assignment_Routes);
 //Assignment-1 Related Work
 
 app.get('/healthz', (req, res) => {
+    metrics.increment('myendpoint.healthz.get');
     logger.info("This is a healthz checkpoint"); 
     if((Object.keys(req.body).length > 0) || (Object.keys(req.query).length > 0)){ 
       return res.status(400).json();
@@ -36,6 +38,7 @@ app.get('/healthz', (req, res) => {
   });
 });
 app.all('/healthz', (req, res) => {
+  metrics.increment('myendpoint.healthz.all');
   logger.info("This is a checkout where you 405, since the method isn't found"); 
   res
     .status(405)
