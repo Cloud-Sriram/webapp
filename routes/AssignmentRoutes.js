@@ -14,7 +14,7 @@ const logger = require('../logger/logs')
 // . Get request to get User Validation
  
 router.get('/', async (req, res) => {
-    metrics.increment('myendpoint.healthz.http.get');
+    metrics.increment('myendpoint.get.method');
     if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
         logger.warn('GET / - Bad Request: This endpoint does not accept query parameters or request body.');
         return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
 // Method to Post Data into the server
 // Method to Post Data into the server
 router.post('/', async (req, res) => {
-    metrics.increment('myendpoint.healthz.http.post');
+    metrics.increment('myendpoint.post.method');
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
@@ -79,21 +79,43 @@ router.post('/', async (req, res) => {
             return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
         }
  
-        // Your validation logic here
-        const assignment = await Assignment.create({ /* assignment data */ });
+        const { title, points, num_of_attempts, deadline } = req.body;
+        const numericPoints = Number(points);
+        if (!Number.isInteger(numericPoints)) {
+            return res.status(400).json({ error: 'Points should be an integer.' });
+        }
+        if(!(points > 0 && points <= 10)) {
+            return res.status(400).json({error: 'The points should be between 1 and 10 (inclusive)'});
+        }
+        const assignment = await Assignment.create({
+            title,
+            points,
+            num_of_attempts,
+            deadline,
+            assignment_created : new Date(),
+            assignment_updated : new Date()
+ 
+        });
         logger.info(`POST / - Assignment created with ID: ${assignment.id}`);
+        const mappedAssignment = await MappingModels.create
+            ({
+ 
+                userId : user.id,
+                assignmentId : assignment.id
+ 
+            })
  
         res.status(201).json(assignment);
     } catch (error) {
-        logger.error(`POST / - Error creating assignment: ${error.message}`);
+        logger.error(`Error creating assignment: ${error.message}`);
         res.status(400).json({ error: 'Bad request' });
     }
+   
 });
-
  
 // This is the put method
 router.put('/:id', async (req, res) => {
-    metrics.increment('myendpoint.healthz.http.put');
+    metrics.increment('myendpoint.put.method');
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
@@ -153,7 +175,7 @@ router.put('/:id', async (req, res) => {
  
 // Delete Assignment for a particular id
 router.delete('/:id', async (req, res) => {
-    metrics.increment('myendpoint.healthz.http.delete');
+    metrics.increment('myendpoint.delete.method');
     if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
         return res.status(400).json({ error: 'Bad Request: This endpoint does not accept query parameters or request body.' });
     }
@@ -203,7 +225,7 @@ router.delete('/:id', async (req, res) => {
  
 // New GET request for fetching an assignment by ID
 router.get('/:id', async (req, res) => {
-    metrics.increment('myendpoint.healthz.http.getbyId')
+    metrics.increment('myendpoint.getbyId.method')
     try {
 
         const authHeader = req.headers['authorization'];
@@ -239,8 +261,10 @@ router.get('/:id', async (req, res) => {
         res.status(403).json({ error: 'Unable to fetch data' });
     }
 });
- 
- 
+
+router.all('/v1/assignments/:id', (req, res) => {
+    res.status(405).json({ error: 'Method not allowed.' });
+});
  
 // Remaining methods should return 405
 router.all('/', (req, res) => {
