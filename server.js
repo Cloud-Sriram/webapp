@@ -11,6 +11,7 @@ const assignment_Routes = require('./routes/AssignmentRoutes');
 const db = require('./mydb.js');
 const logger = require('./logger/logs');
 const metrics = require('./metrics/metrics');
+const AWS = require('aws-sdk');
 app.use(express.json());
 app.use('/v1/assignments', assignment_Routes);
 
