@@ -33,17 +33,20 @@ class SubmissionController {
 
             // Create submission
             const submission = await Submission.create({
-                userId: user.id,
+                // userId: user.id,
                 assignmentId,
                 submissionUrl,
                 submissionDate: new Date(),
                 submissionUpdated: new Date()
             });
 
+            console.log("this is fdata for assignment", assignment);
+
             const dataForSnsMessage = {
-                submission_url: submissionUrl,
+                submissionUrl: submissionUrl,
                 user_email: user.email, // Assuming email is a direct property of the user object
                 assignmentID: assignmentId,
+                assignment_Name: assignment.title,
                 submissionID: submission.id
             };
             await publishMessageToSNS(dataForSnsMessage);

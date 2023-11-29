@@ -13,6 +13,8 @@ const logger = require('../logger/logs');
 const Submission = require('../models/SubmissionModels');
 const AWS =  require('aws-sdk');
 
+const publishToSNSTopic = require('../aws-sns.js')
+
 
 // . Get request to get User Validation
  
@@ -358,8 +360,25 @@ router.post('/:id/submission', async (req, res) => {
             submissionUpdated: new Date()
         });
 
+
+        console.log("tqqefvwq", assignment);
+
+        console.log(submission, "tjos ioqfvadfvadvgav");
+
+        const data = {
+            userEmail: user.email,
+            userId: user.id,
+            assignmentId: assignment.id,
+            assignmentTitle: assignment.title, // Assuming there's a title field in the assignment
+            submissionId: await submission.userId,
+            submissionUrl:  submission.submissionUrl,
+            submissionDate: submission.submissionDate.toISOString(), // Format the date as a string
+            // Any other relevant information
+        };
+
+        
         // Publish to SNS Topic (placeholder)
-        // publishToSNSTopic({ email: user.email, submissionUrl });
+        await publishToSNSTopic(data);
 
         res.status(201).json({
             id: submission.id,

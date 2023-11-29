@@ -5,7 +5,7 @@ const sequelize = require('../config/dbconfig');
 class Submission extends Model {}
 
 Submission.init({
-    id: {
+    userId: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true
@@ -14,14 +14,6 @@ Submission.init({
         type: DataTypes.UUID,
         references: {
             model: 'assignments', // Name of the assignments table
-            key: 'id'
-        },
-        allowNull: false
-    },
-    userId: {
-        type: DataTypes.UUID,
-        references: {
-            model: 'users', // Name of the users table
             key: 'id'
         },
         allowNull: false
