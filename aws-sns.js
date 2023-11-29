@@ -1,7 +1,7 @@
 const logger = require('./logger/log');
 const AWS = require('aws-sdk');
 require('dotenv').config();
-//const awsProfile = 'sbanala2dev';
+//const awsProfile = 'demo-account';
 // AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: awsProfile });
 const snsTopicArn = process.env.ARNSNSTOPIC;
 const snsregion = process.env.AWS_SNS_REGION;

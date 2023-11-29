@@ -10,6 +10,7 @@ const MappingModels = require('../models/MappingModels');
 const { request } = require('express');
 const metrics = require('../metrics/metrics');
 const logger = require('../logger/logs')
+const Submission = require('../models/SubmissionModels');
  
 // . Get request to get User Validation
  
@@ -293,6 +294,83 @@ router.get('/:id', async (req, res) => {
     } catch (error) {
         logger.error(`Error fetching data: ${error.message}`);
         res.status(403).json({ error: 'Unable to fetch data' });
+    }
+});
+
+router.post('/:id/submission', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+        logger.warn('POST /:id/submission - Unauthenticated access attempt.');
+        return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+    }
+
+    // Decoding credentials from the Basic Auth header
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    const [email, password] = credentials.split(':');
+
+    // Authenticating the user
+    try {
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            logger.error('POST /:id/submission - Authentication failed. User not found.');
+            return res.status(401).json({ error: 'Authentication failed. User not found.' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            logger.error('POST /:id/submission - Authentication failed. Invalid password.');
+            return res.status(401).json({ error: 'Authentication failed. Invalid password.' });
+        }
+
+        // User is authenticated, proceed with the submission logic
+        const assignmentId = req.params.id;
+        const { submissionUrl } = req.body;
+
+        // Fetch assignment and check if it exists
+        const assignment = await Assignment.findByPk(assignmentId);
+        if (!assignment) {
+            logger.warn(`Assignment not found for ID: ${assignmentId}`);
+            return res.status(404).json({ error: 'Assignment not found.' });
+        }
+
+        // Check if the deadline has passed
+        if (new Date(assignment.deadline) < new Date()) {
+            logger.warn(`Submission deadline has passed for assignment ID: ${assignmentId}`);
+            return res.status(403).json({ error: 'Submission deadline has passed.' });
+        }
+
+        // Check if user has not exceeded retries
+        const submissions = await Submission.findAll({ where: { userId: user.id, assignmentId } });
+        if (submissions.length >= assignment.num_of_attempts) {
+            logger.warn(`Maximum submission attempts exceeded for user ID: ${user.id} and assignment ID: ${assignmentId}`);
+            return res.status(403).json({ error: 'Maximum submission attempts exceeded.' });
+        }
+
+        // Create submission
+        const submission = await Submission.create({
+            userId: user.id,
+            assignmentId,
+            submissionUrl,
+            submissionDate: new Date(),
+            submissionUpdated: new Date()
+        });
+
+
+        // Publish to SNS Topic (placeholder)
+        // publishToSNSTopic({ email: user.email, submissionUrl });
+
+        res.status(201).json({
+            id: submission.id,
+            assignment_id: assignment.id,
+            submission_url: submission.submissionUrl,
+            submission_date: submission.submissionDate,
+            submission_updated: submission.submissionUpdated
+        });
+    } catch (error) {
+        console.error(`Error details:`, error);
+        logger.error(`Error creating submission: ${error.message}`);
+        res.status(400).json({ error: 'Bad request' });
     }
 });
 
