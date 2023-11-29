@@ -9,9 +9,11 @@ app.use(express.json());
 const MappingModels = require('../models/MappingModels');
 const { request } = require('express');
 const metrics = require('../metrics/metrics');
-const logger = require('../logger/logs')
+const logger = require('../logger/logs');
 const Submission = require('../models/SubmissionModels');
- 
+const AWS =  require('aws-sdk');
+
+
 // . Get request to get User Validation
  
 router.get('/', async (req, res) => {
@@ -298,19 +300,19 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/:id/submission', async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Basic ')) {
-        logger.warn('POST /:id/submission - Unauthenticated access attempt.');
-        return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
-    }
-
-    // Decoding credentials from the Basic Auth header
-    const base64Credentials = authHeader.split(' ')[1];
-    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-    const [email, password] = credentials.split(':');
-
-    // Authenticating the user
     try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader || !authHeader.startsWith('Basic ')) {
+            logger.warn('POST /:id/submission - Unauthenticated access attempt.');
+            return res.status(401).json({ error: 'Unauthorized - User not authenticated' });
+        }
+
+        // Decoding credentials from the Basic Auth header
+        const base64Credentials = authHeader.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+        const [email, password] = credentials.split(':');
+
+        // Authenticating the user
         const user = await User.findOne({ where: { email } });
         if (!user) {
             logger.error('POST /:id/submission - Authentication failed. User not found.');
@@ -356,7 +358,6 @@ router.post('/:id/submission', async (req, res) => {
             submissionUpdated: new Date()
         });
 
-
         // Publish to SNS Topic (placeholder)
         // publishToSNSTopic({ email: user.email, submissionUrl });
 
@@ -374,18 +375,7 @@ router.post('/:id/submission', async (req, res) => {
     }
 });
 
-router.all('/v1/assignments/:id', (req, res) => {
-    res.status(405).json({ error: 'Method not allowed.' });
-});
- 
-// Remaining methods should return 405
-router.all('/', (req, res) => {
-    metrics.increment('myendpoint.all');
-    logger.warn('ALL / - Method not allowed.');
-    res
-      .status(405)
-      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
-      .json();
-  });
+
+
  
 module.exports = router;
