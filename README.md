@@ -14,7 +14,7 @@ An in-depth paragraph about your project and overview of use.
 - ex. Windows 10, Linux, Mac OS X, etc.
 - ex. AWS CLI, Node.js, Python 3.6, etc.
 
-### Installing
+### Installing tech
 
 - How/where to download your program
 - Any modifications needed to be made to files/folders
