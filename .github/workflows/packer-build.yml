@@ -394,7 +394,7 @@ jobs:
 
       - name: Build AMI
         working-directory: ./ami
-        run: packer build --var-file=ami.pkrvars.hcl ami.pkr.hcl
+        run: packer build --var-file=aws-ubuntu.pkr.hcl
 
       - name: Configure AWS DEMO
         uses: aws-actions/configure-aws-credentials@v4
