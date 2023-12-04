@@ -1,240 +1,240 @@
 # name: Run packer build on a template file
 # on:
- 
+
 #   push:
- 
+
 #     branches:
- 
+
 #         - main
- 
+
 # env:
- 
+
 #   PRODUCT_VERSION: "1.9.4"
- 
+
 #   AMI_REGION: ${{ vars.AMI_REGION }}
- 
+
 #   LOGIN_USERNAME: ${{ vars.LOGIN_USERNAME }}
- 
+
 #   INSTANCE_TYPE: ${{ vars.INSTANCE_TYPE }}
- 
+
 #   AMIOWNERID: ${{ vars.AMIOWNERID }}
- 
+
 #   AMISHAREDOWNER: ${{ vars.AMISHAREDOWNER }}
- 
+
 #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
- 
+
 #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
- 
+
 #   PORT: ${{ vars.PORT }}
+
  
+
  
- 
- 
- 
+
 # jobs:
- 
+
 #   packer_build:
- 
+
 #     runs-on: ubuntu-latest
- 
+
 #     name: Build AMI Image
- 
+
 #     env:
- 
+
 #         DATABASE_HOST: ${{ vars.DATABASE_HOST }}
- 
+
 #         DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
- 
+
 #         DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
- 
+
 #         DATABASE_NAME: ${{ vars.DATABASE_NAME }}
- 
+
     
- 
+
 #     strategy:
- 
+
 #       matrix:
- 
+
 #         node-version: [16.x]
+
  
- 
- 
+
 #     steps:
- 
+
 #       - name: git checkout current repo code
- 
+
 #         uses: actions/checkout@v4
- 
+
       
- 
+
 #       - name: install npm modules
- 
+
 #         run: npm ci
+
  
- 
- 
+
 #       - name: fund npm
- 
+
 #         run: npm fund
- 
+
       
- 
+
 #       - name: Use Node.js ${{ matrix.node-version }}
- 
+
 #         uses: actions/setup-node@v2
- 
+
 #         with:
- 
+
 #           node-version: ${{ matrix.node-version }}
- 
+
 #           cache: 'npm'
- 
+
         
- 
+
 #       - name: Start MySql Server
- 
+
 #         run: sudo systemctl start mysql
+
  
- 
- 
+
 #       - name: zip the file
- 
+
 #         uses: thedoctor0/zip-release@0.7.1
- 
+
 #         with:
- 
+
 #           type: 'zip'
- 
+
 #           filename: 'webapp.zip'
- 
+
 #           exclusions: '*.git* /*node_modules/* '
- 
+
       
- 
+
 #       - name: write variables into env file
- 
+
 #         run: |
- 
+
 #           echo "DATABASE_HOST: ${{vars.DATABASE_HOST}}" >> .env
- 
+
 #           echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
- 
+
 #           echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
- 
+
 #           echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
- 
+
 #           echo "PORT: ${{ vars.PORT }}" >> .env
- 
+
 #           echo "below are environment variables"
- 
+
 #           cat .env
- 
+
 #         shell: bash
+
  
- 
- 
+
 #       - name: Setup `packer`
- 
+
 #         uses: hashicorp/setup-packer@main
- 
+
 #         id: setup
- 
+
 #         with:
- 
+
 #           version: ${{ env.PRODUCT_VERSION }}
+
  
- 
- 
+
 #       - name: Check version of packer
- 
+
 #         run: packer -v
- 
+
       
- 
+
 #       - name: Add required plugins
- 
+
 #         run: packer init .
+
  
- 
- 
+
 #       - name: format packer content
- 
+
 #         run: packer fmt .
- 
+
       
- 
+
 #       - name: validate packer
- 
+
 #         run: packer validate .
- 
+
       
- 
+
 #       - name: packer build
- 
-#         run: |
+
+#         run: | 
 #           packer build -var "region=$AMI_REGION" \
 #           -var "ssh_username=$LOGIN_USERNAME" \
 #           -var "instance_type=$INSTANCE_TYPE" \
 #           -var "ami_users=$AMISHAREDOWNER" \
 #           -var "owners=$AMIOWNERID" aws-ubuntu.pkr.hcl
- 
+
 name: Run packer build on a template file
- 
+
 on:
   push:
     branches:
       - main
- 
+
 env:
   PRODUCT_VERSION: "1.9.4"
-  AMI_REGION: ${{ secrets.AMI_REGION }}
-  LOGIN_USERNAME: ${{ secrets.LOGIN_USERNAME }}
-  INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
-  AMIOWNERID: ${{ secrets.AMIOWNERID }}
-  AMISHAREDOWNER: ${{ secrets.AMISHAREDOWNER }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  PORT: ${{ secrets.PORT }}
-  DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-  DATABASE_USER: ${{ secrets.ROOT_DATABASE_USER }}
-  DATABASE_PASSWORD: ${{ secrets.ROOT_DATABASE_PASSWORD }}
-  DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
- 
+  AMI_REGION: ${{ vars.AMI_REGION }}
+  LOGIN_USERNAME: ${{ vars.LOGIN_USERNAME }}
+  INSTANCE_TYPE: ${{ vars.INSTANCE_TYPE }}
+  AMIOWNERID: ${{ vars.AMIOWNERID }}
+  AMISHAREDOWNER: ${{ vars.AMISHAREDOWNER }}
+  AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+  PORT: ${{ vars.PORT }}
+  DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+  DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
+  DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
+  DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+
 jobs:
   packer_build:
     runs-on: ubuntu-latest
     name: Build AMI Image
- 
+
     strategy:
       matrix:
         node-version: [16.x]
- 
+
     steps:
       - name: git checkout current repo code
         uses: actions/checkout@v4
- 
+
       - name: install npm modules
         run: npm ci
- 
+
       - name: fund npm
         run: npm fund
- 
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
- 
+
       - name: Start MySql Server
         run: sudo systemctl start mysql
- 
+
       - name: zip the file
         uses: thedoctor0/zip-release@0.7.1
         with:
           type: 'zip'
           filename: 'webapp.zip'
           exclusions: '*.git* /*node_modules/* '
- 
+
       - name: write variables into env file
         run: |
           echo "DATABASE_HOST: ${{ secrets.DATABASE_HOST }}" >> .env
@@ -245,69 +245,69 @@ jobs:
           echo "below are environment variables"
           cat .env
         shell: bash
- 
+
       - name: Setup `packer`
         uses: hashicorp/setup-packer@main
         id: setup
         with:
           version: ${{ env.PRODUCT_VERSION }}
- 
+
       - name: Check version of packer
         run: packer -v
- 
+
       - name: Add required plugins
         run: packer init .
- 
+
       - name: format packer content
         run: packer fmt .
- 
+
       - name: validate packer
         run: packer validate .
- 
+
       - name: packer build
         run: |
-              packer build -var "region=${{ secrets.AMI_REGION }}" \
-              -var "ssh_username=${{ secrets.LOGIN_USERNAME }}" \
-              -var "instance_type=${{ secrets.INSTANCE_TYPE }}" \
-              -var "ami_users=${{ secrets.AMISHAREDOWNER }}" \
-              -var "owners=${{ secrets.AMIOWNERID }}" aws-ubuntu.pkr.hcl
-              ami_id=$(cat manifest.json | grep -o '"artifact_id": "[^"]*' | cut -d'"' -f4 | cut -d':' -f2)
-              echo $ami_id
-              echo "AMI_ID=$ami_id" >> $GITHUB_ENV
- 
+          packer build -var "region=${{ env.AMI_REGION }}" \
+          -var "ssh_username=${{ env.LOGIN_USERNAME }}" \
+          -var "instance_type=${{ env.INSTANCE_TYPE }}" \
+          -var "ami_users=${{ env.AMISHAREDOWNER }}" \
+          -var "owners=${{ env.AMIOWNERID }}" aws-ubuntu.pkr.hcl
+          ami_id=$(cat manifest.json | grep -o '"artifact_id": "[^"]*' | cut -d'"' -f4 | cut -d':' -f2)
+          echo $ami_id
+          echo "AMI_ID=$ami_id" >> $GITHUB_ENV
+
       - name: Set AMI ID as a variable
         run: echo "ami_id=${{ env.AMI_ID }}"
- 
+
       - name: Create New Version of Launch Template
         run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
           aws ec2 create-launch-template-version \
-          --launch-template-name ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+          --launch-template-name ${{ vars.LAUNCH_TEMPLATE_ID }} \
           --version-description "New version with AMI ${{ env.AMI_ID }}" \
           --region ${{ env.AMI_REGION }} \
           --source-version 1 \
           --launch-template-data '{"ImageId": "${{ env.AMI_ID }}" }'
- 
+
       - name: Apply Launch Template Refresh
         run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
           refresh_response=$(aws autoscaling start-instance-refresh \
-          --auto-scaling-group-name ${{ secrets.AUTO_SCALE_GROUP_ID}}  \
+          --auto-scaling-group-name ${{ vars.AUTO_SCALE_GROUP_ID}}  \
           --desired-configuration '{"LaunchTemplate" : { "LaunchTemplateId":"${{ secrets.LAUNCH_TEMPLATE_ID }}", "Version":"$Latest" }}' \
           --region ${{ env.AMI_REGION }} \
           --query 'InstanceRefreshId' \
           --output text)
- 
+
           while true; do
             refresh_status=$(aws autoscaling describe-instance-refreshes \
-              --auto-scaling-group-name ${{ secrets.AUTO_SCALE_GROUP_ID}}  \
+              --auto-scaling-group-name ${{ vars.AUTO_SCALE_GROUP_ID}}  \
               --instance-refresh-ids $refresh_response \
               --region ${{ env.AMI_REGION }} \
               --query 'InstanceRefreshes[0].Status' \
               --output text)
- 
+
             if [ "$refresh_status" == "Pending" ] || [ "$refresh_status" == "InProgress" ]; then
               echo "Instance refresh is still in progress. Waiting..."
               sleep 60
