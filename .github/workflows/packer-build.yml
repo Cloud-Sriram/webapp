@@ -328,7 +328,7 @@
 #             fi
 #           done
 
-- name: packer build
+name: packer build
   run: |
     packer build -var "region=$AMI_REGION" \
     -var "ssh_username=$LOGIN_USERNAME" \
@@ -339,10 +339,10 @@
     echo $ami_id
     echo "AMI_ID=$ami_id" >> $GITHUB_ENV
 
-- name: Set AMI ID as a variable
+name: Set AMI ID as a variable
   run: echo "ami_id=${{ env.AMI_ID }}"
 
-- name: Create New Version of Launch Template
+name: Create New Version of Launch Template
   run: |
     export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
     export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
@@ -353,7 +353,7 @@
     --source-version 1 \
     --launch-template-data '{"ImageId": "${{ env.AMI_ID }}" }'
 
-- name: Apply Launch Template Refresh
+name: Apply Launch Template Refresh
   run: |
     export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
     export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
