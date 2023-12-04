@@ -178,62 +178,62 @@ jobs:
           -var "ami_users=$AMISHAREDOWNER" \
           -var "owners=$AMIOWNERID" aws-ubuntu.pkr.hcl
 
-    - name: Configure AWS DEMO
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
- 
-           aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
-           aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY}}
-           aws-region: us-east-1
- 
- 
+      - name: Configure AWS DEMO
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+  
+            aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY}}
+            aws-region: us-east-1
+  
+  
       - name: Retrieve Latest AMI ID
-        working-directory: ./ami
-        run: |
-          AMI_ID=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
-     
-      - name: Create New Version of Launch Template
-        run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY  }}
-         
-          aws ec2 create-launch-template-version \
-          --launch-template-id "mylaunchtemplate" \
-          --version-description "New version with AMI ${{ env.AMI_ID }}" \
-          --region us-east-1 \
-          --source-version 1 \
-          --launch-template-data '{"ImageId": "${{ env.AMI_ID }}" }'
- 
-      - name: Apply Launch Template Refresh
-        run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY   }}
- 
- 
-          refresh_response=$(aws autoscaling start-instance-refresh \
-          --auto-scaling-group-name auto-scaling-group \
-          --desired-configuration '{"LaunchTemplate" : { "LaunchTemplateId":"mylaunchtemplate", "Version":"$Latest" }}' \
-          --region us-east-1 \
-          --query 'InstanceRefreshId' \
-          --output text)
- 
-          while true; do
-            refresh_status=$(aws autoscaling describe-instance-refreshes \
-              --auto-scaling-group-name auto-scaling-group \
-              --instance-refresh-ids $refresh_response \
-              --region us-east-1 \
-              --query 'InstanceRefreshes[0].Status' \
-              --output text)
+          working-directory: ./ami
+          run: |
+            AMI_ID=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
+            echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
       
-            if [ "$refresh_status" == "Pending" ] || [ "$refresh_status" == "InProgress" ]; then
-              echo "Instance refresh is still in progress. Waiting..."
-              sleep 60  # Wait for 60 seconds before checking again
-            elif [ "$refresh_status" == "Successful" ]; then
-              echo "Instance refresh completed successfully."
-              break  # Exit the loop when refresh is successful
-            else
-              echo "Error: Instance refresh failed or encountered an unexpected status: $refresh_status"
-              exit 1  # Exit with an error if refresh fails or has unexpected status
-            fi
-          done
+      - name: Create New Version of Launch Template
+          run: |
+            export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY  }}
+          
+            aws ec2 create-launch-template-version \
+            --launch-template-id "mylaunchtemplate" \
+            --version-description "New version with AMI ${{ env.AMI_ID }}" \
+            --region us-east-1 \
+            --source-version 1 \
+            --launch-template-data '{"ImageId": "${{ env.AMI_ID }}" }'
+  
+      - name: Apply Launch Template Refresh
+          run: |
+            export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY   }}
+  
+  
+            refresh_response=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name auto-scaling-group \
+            --desired-configuration '{"LaunchTemplate" : { "LaunchTemplateId":"mylaunchtemplate", "Version":"$Latest" }}' \
+            --region us-east-1 \
+            --query 'InstanceRefreshId' \
+            --output text)
+  
+            while true; do
+              refresh_status=$(aws autoscaling describe-instance-refreshes \
+                --auto-scaling-group-name auto-scaling-group \
+                --instance-refresh-ids $refresh_response \
+                --region us-east-1 \
+                --query 'InstanceRefreshes[0].Status' \
+                --output text)
+        
+              if [ "$refresh_status" == "Pending" ] || [ "$refresh_status" == "InProgress" ]; then
+                echo "Instance refresh is still in progress. Waiting..."
+                sleep 60  # Wait for 60 seconds before checking again
+              elif [ "$refresh_status" == "Successful" ]; then
+                echo "Instance refresh completed successfully."
+                break  # Exit the loop when refresh is successful
+              else
+                echo "Error: Instance refresh failed or encountered an unexpected status: $refresh_status"
+                exit 1  # Exit with an error if refresh fails or has unexpected status
+              fi
+            done
