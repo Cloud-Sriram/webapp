@@ -34,7 +34,6 @@ packer {
   }
 }
 
-# Add the debugging provisioner block
 provisioner "shell" {
   inline = [
     "echo 'AWS CLI Configuration:'",
