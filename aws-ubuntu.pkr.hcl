@@ -35,7 +35,6 @@ packer {
 }
 
 
-
 source "amazon-ebs" "debian" {
   ami_name        = "csye6225_V1_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
   instance_type   = "${var.instance_type}"
@@ -81,6 +80,15 @@ build {
 
   provisioner "shell" {
     script = "./install.sh"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "echo 'AWS CLI Configuration:'",
+      "cat ~/.aws/config",
+      "echo 'AWS CLI Credentials:'",
+      "cat ~/.aws/credentials",
+    ]
   }
 
   post-processor "manifest" {
