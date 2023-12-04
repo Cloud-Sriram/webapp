@@ -366,11 +366,11 @@ jobs:
 
       - name: Write variables into env file
         run: |
-          echo "DATABASE_HOST: ${{ secrets.DATABASE_HOST }}" >> .env
-          echo "DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}" >> .env
-          echo "DATABASE_NAME: ${{ secrets.DATABASE_NAME }}" >> .env
-          echo "DATABASE_HOST: ${{ secrets.DATABASE_HOST }}" >> .env
-          echo "PORT: ${{ secrets.PORT }}" >> .env
+          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+          echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
+          echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
+          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+          echo "PORT: ${{ vars.PORT }}" >> .env
           echo "below are environment variables"
           cat .env
         shell: bash
@@ -414,7 +414,7 @@ jobs:
           aws ec2 create-launch-template-version \
           --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
           --version-description "New version with AMI ${{ env.AMI_ID }}" \
-          --region ${{ secrets.AMI_REGION }} \
+          --region ${{ vars.AMI_REGION }} \
           --source-version 1 \
           --launch-template-data '{"ImageId": "${{ env.AMI_ID }}" }'
 
