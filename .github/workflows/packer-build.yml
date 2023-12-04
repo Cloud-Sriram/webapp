@@ -394,11 +394,11 @@ jobs:
 
       - name: Build AMI
         run: |
-          packer build -var "region=${{ vars.AMI_REGION }}" \
-          -var "ssh_username=${{ vars.LOGIN_USERNAME }}" \
-          -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
-          -var "ami_users=${{ vars.AMISHAREDOWNER }}" \
-          -var "owners=${{ vars.AMIOWNERID }}" aws-ubuntu.pkr.hcl
+          packer build -var "region=$AMI_REGION" \
+          -var "ssh_username=$LOGIN_USERNAME" \
+          -var "instance_type=$INSTANCE_TYPE " \
+          -var "ami_users=$AMISHAREDOWNER }}" \
+          -var "owners=$AMIOWNERID }}" aws-ubuntu.pkr.hcl
 
           ami_id=$(cat manifest.json | grep -o '"artifact_id": "[^"]*' | cut -d'"' -f4 | cut -d':' -f2)
           echo $ami_id
