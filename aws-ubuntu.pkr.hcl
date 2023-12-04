@@ -82,15 +82,6 @@ build {
     script = "./install.sh"
   }
 
-  provisioner "shell" {
-    inline = [
-      "echo 'AWS CLI Configuration:'",
-      "cat ~/.aws/config",
-      "echo 'AWS CLI Credentials:'",
-      "cat ~/.aws/credentials",
-    ]
-  }
-
   post-processor "manifest" {
     output     = "manifest.json"
     strip_path = true
