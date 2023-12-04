@@ -393,7 +393,7 @@ jobs:
         run: packer validate .
 
       - name: Build AMI
-        working-directory: ./ami
+        working-directory: ./packer-build
         run: packer build --var-file=/Users/sriramvoruganti/Downloads/Cloud/SriramVoruganti-Assignment-002778721-8/webapp/aws-ubuntu.pkr.hcl
 
 
