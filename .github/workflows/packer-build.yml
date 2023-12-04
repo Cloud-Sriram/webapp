@@ -1,81 +1,184 @@
-name: CI/CD test
- 
+name: Run packer build on a template file
 on:
+
   push:
-    branches: [ main ]
- 
+
+    branches:
+
+        - main
+
 env:
-  PRODUCT_VERSION: "latest"
-  ASG_NAME: "auto-scaling-group"
-  
+
+  PRODUCT_VERSION: "1.9.4"
+
+  AMI_REGION: ${{ vars.AMI_REGION }}
+
+  LOGIN_USERNAME: ${{ vars.LOGIN_USERNAME }}
+
+  INSTANCE_TYPE: ${{ vars.INSTANCE_TYPE }}
+
+  AMIOWNERID: ${{ vars.AMIOWNERID }}
+
+  AMISHAREDOWNER: ${{ vars.AMISHAREDOWNER }}
+
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  PORT: ${{ vars.PORT }}
+
  
+
+ 
+
 jobs:
-  build_ami:
+
+  packer_build:
+
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: 'Bitspilani18#'
-          MYSQL_DATABASE: 'testing'
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=7s --health-retries=3
+
+    name: Build AMI Image
+
+    env:
+
+        DATABASE_HOST: ${{ vars.DATABASE_HOST }}
+
+        DATABASE_USER: ${{ vars.ROOT_DATABASE_USER }}
+
+        DATABASE_PASSWORD: ${{ vars.ROOT_DATABASE_PASSWORD }}
+
+        DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+
+    
+
+    strategy:
+
+      matrix:
+
+        node-version: [16.x]
+
  
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+
+      - name: git checkout current repo code
+
+        uses: actions/checkout@v4
+
+      
+
+      - name: install npm modules
+
+        run: npm ci
+
  
-      - name: Run Node.js project
-        uses: actions/setup-node@v3
+
+      - name: fund npm
+
+        run: npm fund
+
+      
+
+      - name: Use Node.js ${{ matrix.node-version }}
+
+        uses: actions/setup-node@v2
+
         with:
-          node-version: 20
+
+          node-version: ${{ matrix.node-version }}
+
+          cache: 'npm'
+
+        
+
+      - name: Start MySql Server
+
+        run: sudo systemctl start mysql
+
  
-      - name: Wait for MySQL to be ready
-        run: |
-          until nc -z -v -w30 localhost 3306
-          do
-            echo "Waiting for MySQL to be ready..."
-            sleep 5
-          done
-      - name: Install project dependencies
-        run: npm install
- 
-     # - name: Run Integration tests
-      #  run: npm test
- 
-      - name: Zip the file
+
+      - name: zip the file
+
         uses: thedoctor0/zip-release@0.7.1
+
         with:
+
           type: 'zip'
+
           filename: 'webapp.zip'
+
           exclusions: '*.git* /*node_modules/* '
+
+      
+
+      - name: write variables into env file
+
+        run: |
+
+          echo "DATABASE_HOST: ${{vars.DATABASE_HOST}}" >> .env
+
+          echo "DATABASE_PASSWORD: ${{ vars.DATABASE_PASSWORD }}" >> .env
+
+          echo "DATABASE_NAME: ${{ vars.DATABASE_NAME }}" >> .env
+
+          echo "DATABASE_HOST: ${{ vars.DATABASE_HOST }}" >> .env
+
+          echo "PORT: ${{ vars.PORT }}" >> .env
+
+          echo "below are environment variables"
+
+          cat .env
+
+        shell: bash
+
  
-      - name: Install AWSCLI
-        run: sudo pip install awscli
- 
-      - name: Configure AWS DEV
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
- 
+
       - name: Setup `packer`
+
         uses: hashicorp/setup-packer@main
+
         id: setup
+
         with:
+
           version: ${{ env.PRODUCT_VERSION }}
+
  
-      - name: Initialize Packer Init
-        #working-directory: ./packer
+
+      - name: Check version of packer
+
+        run: packer -v
+
+      
+
+      - name: Add required plugins
+
         run: packer init .
+
  
-      - name: Build AMI
-       # working-directory: ./packer
-        run: packer build --var-file=aws-ubuntu.pkr.hcl
- 
-      - name: Configure AWS DEMO
+
+      - name: format packer content
+
+        run: packer fmt .
+
+      
+
+      - name: validate packer
+
+        run: packer validate .
+
+      
+
+      - name: packer build
+
+        run: | 
+          packer build -var "region=$AMI_REGION" \
+          -var "ssh_username=$LOGIN_USERNAME" \
+          -var "instance_type=$INSTANCE_TYPE" \
+          -var "ami_users=$AMISHAREDOWNER" \
+          -var "owners=$AMIOWNERID" aws-ubuntu.pkr.hcl
+
+    - name: Configure AWS DEMO
         uses: aws-actions/configure-aws-credentials@v4
         with:
  
@@ -85,15 +188,15 @@ jobs:
  
  
       - name: Retrieve Latest AMI ID
-        working-directory: ./packer-build
+        working-directory: ./ami
         run: |
           AMI_ID=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
           echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
      
       - name: Create New Version of Launch Template
         run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID  }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY   }}
+          export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY  }}
          
           aws ec2 create-launch-template-version \
           --launch-template-id "mylaunchtemplate" \
@@ -105,7 +208,7 @@ jobs:
       - name: Apply Launch Template Refresh
         run: |
           export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY  }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY   }}
  
  
           refresh_response=$(aws autoscaling start-instance-refresh \
