@@ -9,7 +9,7 @@ const snsregion = process.env.AWS_SNS_REGION;
 
 
 
-AWS.config.update({ region: snsregion,  });
+AWS.config.update({ region: snsregion });
 const sns = new AWS.SNS();
 
 const publishMessageToSNS = async (request, response) => {
