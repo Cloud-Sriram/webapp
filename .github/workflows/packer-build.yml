@@ -68,11 +68,11 @@ jobs:
           version: ${{ env.PRODUCT_VERSION }}
  
       - name: Initialize Packer Init
-        working-directory: ./packer
+        #working-directory: ./packer
         run: packer init .
  
       - name: Build AMI
-        working-directory: ./packer
+       # working-directory: ./packer
         run: packer build --var-file=aws-ubuntu.pkr.hcl
  
       - name: Configure AWS DEMO
