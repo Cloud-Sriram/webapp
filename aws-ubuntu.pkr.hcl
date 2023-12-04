@@ -34,6 +34,16 @@ packer {
   }
 }
 
+# Add the debugging provisioner block
+provisioner "shell" {
+  inline = [
+    "echo 'AWS CLI Configuration:'",
+    "cat ~/.aws/config",
+    "echo 'AWS CLI Credentials:'",
+    "cat ~/.aws/credentials",
+  ]
+}
+
 
 
 source "amazon-ebs" "debian" {
