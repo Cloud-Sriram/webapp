@@ -134,4 +134,3 @@ jobs:
               exit 1  # Exit with an error if refresh fails or has unexpected status
             fi
           done
-has context menu
