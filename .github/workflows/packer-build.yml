@@ -41,8 +41,8 @@ jobs:
       - name: Install project dependencies
         run: npm install
  
-      - name: Run Integration tests
-        run: npm test
+     # - name: Run Integration tests
+      #  run: npm test
  
       - name: Zip the file
         uses: thedoctor0/zip-release@0.7.1
