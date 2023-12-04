@@ -376,7 +376,7 @@ jobs:
         shell: bash
 
       - name: Setup Packer
-        uses: hashicorp/setup-packer@v1
+        uses: hashicorp/setup-packer@main
         with:
           version: 1.9.4
 
