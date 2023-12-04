@@ -393,16 +393,21 @@ jobs:
         run: packer validate .
 
       - name: Build AMI
-        run: |
-          packer build -var "region=$AMI_REGION" \
-          -var "ssh_username=$LOGIN_USERNAME" \
-          -var "instance_type=$INSTANCE_TYPE " \
-          -var "ami_users=$AMISHAREDOWNER }}" \
-          -var "owners=$AMIOWNERID }}" aws-ubuntu.pkr.hcl
+        working-directory: ./ami
+        run: packer build --var-file=ami.pkrvars.hcl ami.pkr.hcl
 
-          ami_id=$(cat manifest.json | grep -o '"artifact_id": "[^"]*' | cut -d'"' -f4 | cut -d':' -f2)
-          echo $ami_id
-          echo "AMI_ID=$ami_id" >> $GITHUB_ENV
+      - name: Configure AWS DEMO
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+           aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+           aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY}}
+           aws-region: us-east-1
+
+      - name: Retrieve Latest AMI ID
+        working-directory: ./ami
+        run: |
+          AMI_ID=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
 
       - name: Set AMI ID as a variable
         run: echo "AMI_ID=${{ env.AMI_ID }}"
