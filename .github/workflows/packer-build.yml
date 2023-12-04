@@ -199,7 +199,7 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY  }}
         
           aws ec2 create-launch-template-version \
-          --launch-template-id "mylaunchtemplate" \
+          --launch-template-name "mylaunchtemplate" \
           --version-description "New version with AMI ${{ env.AMI_ID }}" \
           --region us-east-1 \
           --source-version 1 \
@@ -213,7 +213,7 @@ jobs:
   
           refresh_response=$(aws autoscaling start-instance-refresh \
           --auto-scaling-group-name auto-scaling-group \
-          --desired-configuration '{"LaunchTemplate" : { "LaunchTemplateId":"mylaunchtemplate", "Version":"$Latest" }}' \
+          --desired-configuration '{"LaunchTemplate" : { "LaunchTemplateName":"mylaunchtemplate", "Version":"$Latest" }}' \
           --region us-east-1 \
           --query 'InstanceRefreshId' \
           --output text)
