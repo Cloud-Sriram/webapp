@@ -350,6 +350,7 @@ router.post('/:id/submission', async (req, res) => {
             logger.warn(`Maximum submission attempts exceeded for user ID: ${user.id} and assignment ID: ${assignmentId}`);
             return res.status(403).json({ error: 'Maximum submission attempts exceeded.' });
         }
+        
 
         // Create submission
         const submission = await Submission.create({
@@ -358,6 +359,7 @@ router.post('/:id/submission', async (req, res) => {
             submissionUrl,
             submissionDate: new Date(),
             submissionUpdated: new Date()
+            
         });
 
 
@@ -373,6 +375,7 @@ router.post('/:id/submission', async (req, res) => {
             submissionId: await submission.userId,
             submissionUrl:  submission.submissionUrl,
             submissionDate: submission.submissionDate.toISOString(), // Format the date as a string
+            submissionCount: submissions.length
             // Any other relevant information
         };
 
